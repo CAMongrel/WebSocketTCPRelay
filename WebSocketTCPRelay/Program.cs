@@ -24,9 +24,9 @@ namespace WebSocketTCPRelay
             Console.WriteLine("TCP listen port: " + tcpListenPort);
             Console.WriteLine("WebSocket listen port: " + webSocketListenPort);
 
-            byte[] imageData = File.ReadAllBytes("d:\\test.png");
+            //byte[] imageData = File.ReadAllBytes("d:\\test.png");
 
-            webSocketServer = new WebSocketServer(webSocketListenPort);
+            webSocketServer = new WebSocketServer(webSocketListenPort, false);
             webSocketServer.Start();
 
             Console.WriteLine("Waiting for connection ...");
@@ -42,7 +42,8 @@ namespace WebSocketTCPRelay
                 if (count >= 200)
                 {
                     //webSocketServer.Write(imageData);
-                    webSocketServer.Write(Encoding.UTF8.GetBytes("file:///D:/test.png"), true);
+                    //webSocketServer.Write(Encoding.UTF8.GetBytes("file:///D:/test.png"), true);
+                    webSocketServer.Write(Encoding.UTF8.GetBytes("Hallo Welt!"), true);
 
                     count = 0;
                 }

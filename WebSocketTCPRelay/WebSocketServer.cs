@@ -8,16 +8,23 @@ namespace WebSocketTCPRelay
 {
     internal delegate void ReceiveBytes(byte[] data);
 
+    /// <summary>
+    /// Web socket server.
+    /// 
+    /// See https://tools.ietf.org/html/rfc6455
+    /// </summary>
     class WebSocketServer
     {
         internal event ReceiveBytes OnReceiveBytes;
 
         private TcpListener listener;
+        private bool isSecureListener;
 
         private List<WebSocketTcpClient> connectedWebSockets;
 
-        public WebSocketServer(ushort listenPort)
+        public WebSocketServer(ushort listenPort, bool useTLS)
         {
+            isSecureListener = useTLS;
             connectedWebSockets = new List<WebSocketTcpClient>();
             listener = new TcpListener(IPAddress.Any, listenPort);
         }
@@ -36,16 +43,16 @@ namespace WebSocketTCPRelay
 
         private void AcceptTcpClientCallback(IAsyncResult ar)
         {
-            TcpListener listener = (TcpListener)ar.AsyncState;
+            TcpListener listenerInstance = (TcpListener)ar.AsyncState;
 
-            TcpClient client = listener.EndAcceptTcpClient(ar);
+            TcpClient client = listenerInstance.EndAcceptTcpClient(ar);
 
             Console.WriteLine("Client connected from " + client.Client.RemoteEndPoint);
 
-            WebSocketTcpClient webSocketTcpClient = new WebSocketTcpClient(client);
-            webSocketTcpClient.OnDidClose += (tcp, wsClient) =>
+            WebSocketTcpClient webSocketTcpClient = new WebSocketTcpClient(client, isSecureListener);
+            webSocketTcpClient.OnDidClose += (endpoint, wsClient) =>
             {
-                Console.WriteLine("Removing client ... " + tcp.Client.RemoteEndPoint);
+                Console.WriteLine("Removing client ... " + endpoint);
                 if (connectedWebSockets.Contains(webSocketTcpClient))
                 {
                     connectedWebSockets.Remove(webSocketTcpClient);
@@ -55,11 +62,13 @@ namespace WebSocketTCPRelay
             {
                 OnReceiveBytes?.Invoke(data);
             };
+            // TODO: Implement "CONNECTING" and "CONNECTED" states to limit
+            // the number of "CONNECTING" requests from a specific client to "one"
             connectedWebSockets.Add(webSocketTcpClient);
             webSocketTcpClient.Start();
 
             // Wait for more clients
-            listener.BeginAcceptTcpClient(AcceptTcpClientCallback, listener);
+            listenerInstance.BeginAcceptTcpClient(AcceptTcpClientCallback, listenerInstance);
         }
 
         public void Write(byte[] data, bool asTextFrames = false)
