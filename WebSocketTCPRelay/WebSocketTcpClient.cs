@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -67,14 +68,50 @@ namespace WebSocketTCPRelay
 
         private byte[] EncodeData(byte[] data, bool asTextFrames)
         {
-            byte[] res = new byte[data.Length + 2];
+            /*using (MemoryStream memStream = new MemoryStream(data.Length + 10))
+            {
+                WebSocketOpCode
+            }*/
 
-            res[0] = (byte)((1 << 7) + (asTextFrames ? 0x2 : 0x1));
+            int reqHeaderBytes = 2;
 
-            // TODO: Check if length > 125 etc.
-            res[1] = (byte)data.Length;
+            byte firstByte = (byte)((byte)0x80 | (asTextFrames ? 0x1 : 0x2));
+            byte secondByte = 0;
 
-            Array.Copy(data, 0, res, 2, data.Length);
+            if (data.Length < 126)
+            {
+                secondByte = (byte)data.Length;
+                reqHeaderBytes = 2;
+            }
+            else if (data.Length >= 126 && data.Length <= ushort.MaxValue)
+            {
+                secondByte = (byte)126;
+                reqHeaderBytes = 4;
+            }
+            else
+            {
+                secondByte = (byte)127;
+                reqHeaderBytes = 6;
+            }
+
+            byte[] res = new byte[data.Length + reqHeaderBytes];
+
+            res[0] = firstByte;
+            res[1] = secondByte;
+            if (reqHeaderBytes == 4)
+            {
+                res[2] = (byte)((data.Length >> 8) & 0xFF);
+                res[3] = (byte)(data.Length & 0xFF);
+            }
+            else if (reqHeaderBytes == 6)
+            {
+                res[2] = (byte)((data.Length >> 24) & 0xFF);
+                res[3] = (byte)((data.Length >> 16) & 0xFF);
+                res[4] = (byte)((data.Length >> 8) & 0xFF);
+                res[5] = (byte)(data.Length & 0xFF);
+            }
+
+            Array.Copy(data, 0, res, reqHeaderBytes, data.Length);
 
             return res;
         }
@@ -114,19 +151,33 @@ namespace WebSocketTCPRelay
             {
 
             }
-            byte[] mask = 
+            //byte[] mask = 
 
             return data;
         }
 
         private void ReadCallback(IAsyncResult asyncResult)
         {
+            if (client.Connected == false ||
+                stream == null ||
+                stream.CanRead == false)
+            {
+                client.Close();
+
+                OnDidClose?.Invoke(client, this);
+
+                client = null;
+                return;
+            }
+
             int didRead = stream.EndRead(asyncResult);
+
+            Console.WriteLine("didRead: " + didRead);
 
             byteBuffer.Write(tempBuffer, 0, didRead);
 
             if (IsReady == false)
-            {
+            {                
                 if (HandleSetUpPhase() == false)
                 {
                     client.Close();
@@ -203,6 +254,8 @@ namespace WebSocketTCPRelay
                             + eol);
 
                         stream.Write(response);
+
+                        byteBuffer.Clear();
 
                         IsReady = true;
                     }

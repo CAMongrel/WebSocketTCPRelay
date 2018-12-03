@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -23,6 +24,8 @@ namespace WebSocketTCPRelay
             Console.WriteLine("TCP listen port: " + tcpListenPort);
             Console.WriteLine("WebSocket listen port: " + webSocketListenPort);
 
+            byte[] imageData = File.ReadAllBytes("d:\\test.png");
+
             webSocketServer = new WebSocketServer(webSocketListenPort);
             webSocketServer.Start();
 
@@ -36,9 +39,10 @@ namespace WebSocketTCPRelay
 
                 count++;
 
-                if (count >= 100)
+                if (count >= 200)
                 {
-                    webSocketServer.Write(Encoding.UTF8.GetBytes("Hallo Welt!"));
+                    //webSocketServer.Write(imageData);
+                    webSocketServer.Write(Encoding.UTF8.GetBytes("file:///D:/test.png"), true);
 
                     count = 0;
                 }
