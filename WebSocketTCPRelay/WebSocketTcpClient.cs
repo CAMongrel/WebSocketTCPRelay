@@ -375,7 +375,14 @@ namespace WebSocketTCPRelay
                         if (decodedData.Length >= 2)
                         {
                             WebSocketStatusCode code = (WebSocketStatusCode)(decodedData[0] << 8 | decodedData[1]);
-                            Console.WriteLine("Received close frame - code: " + code);
+
+                            string reason = "unknown";
+                            if (decodedData.Length > 2)
+                            {
+                                reason = Encoding.UTF8.GetString(decodedData, 2, decodedData.Length - 2);
+                            }
+
+                            Console.WriteLine("Received close frame - code: " + code + " -- reason: " + reason);
                         }
 
                         // Close() will send a close frame if necessary

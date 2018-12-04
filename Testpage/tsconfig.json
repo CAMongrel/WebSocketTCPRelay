@@ -3,7 +3,14 @@
       "target": "es5",
       "module": "commonjs",
       "sourceMap": true,
+      "noImplicitAny": true,
+      "removeComments": true,
       "watch": true
   },
-   "files": ["entrypoint.ts"]
+   "files": [ 
+      "outputwriter.ts",
+      "commands.ts", 
+      "controls.ts",
+      "entrypoint.ts"
+   ]
 }

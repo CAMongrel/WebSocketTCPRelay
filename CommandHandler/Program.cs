@@ -85,23 +85,20 @@ namespace CommandHandler
                     Console.WriteLine("Received message: " + cmd["message"]);
                     break;
 
-                case "list":
-                    string folder = cmd["folder"];
-                    if (folder == null ||
-                        Directory.Exists(folder) == false)
+                case "getinfo":
                     {
-                        folder = "~";
+                        Command command = new Command();
+                        command.Cmd = "getinfor_esult";
+                        SendCommand(command);
                     }
+                    break;
 
-                    string[] files = Directory.GetFiles(folder);
-
-                    Command command = new Command();
-                    command.Cmd = "listresult";
-                    for (int i = 0; i < files.Length; i++)
+                case "startcapture":
                     {
-                        command.Parameters.Add("file" + i, files[i]);
+                        Command command = new Command();
+                        command.Cmd = "startcapture_result";
+                        SendCommand(command);
                     }
-                    SendCommand(command);
                     break;
 
                 default:

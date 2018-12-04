@@ -3,13 +3,38 @@
 		<title>mjpeg-relay example</title>
 	</head>
 	<body>
-		<canvas id="canvas" width="350" height="225"></canvas>
+		<style>
+			.disabled {
+				pointer-events: none;
+				opacity: 0.4;
+			}
+			.enabled {
+				pointer-events: all;
+				opacity: 1.0;
+			}
+		</style>
 
-		<script src="entrypoint.js">
-		</script>
+		<script src="outputwriter.js"></script>
+		<script src="commands.js"></script>
+		<script src="entrypoint.js"></script>
+		<script src="controls.js"></script>
 
-		<div>
-			<input type="button" value="test!" onclick="onpress();" />
+		<div style="background-color:lightsteelblue; padding: 10px;">
+			<div style="font-size: 14pt; font-weight: bold; padding-bottom: 0.5em;">Configuration & Startup</div>
+			<div>Websocket server: <input type="text" value="wss://localhost:54018/" id="serverAddr" /></div>
+			<input type="button" value="Connect" onclick="onConnectClick();" id="conBtn" class="enabled" />
+			<input type="button" value="Disconnect" onclick="onDisconnectClick();" id="disconBtn" class="disabled" />
+		</div>
+
+		<div style="background-color:lightsteelblue; padding: 10px; margin-top: 5px" id="controlsDiv" class="disabled">
+			<div style="font-size: 14pt; font-weight: bold; padding-bottom: 0.5em;">Controls</div>
+			<input type="button" value="Get Info" onclick="onGetInfoPress();" />
+			<input type="button" value="Start Capture" onclick="onStartCapturePress();" />
+		</div>
+
+		<div style="height: 100%; background-color:lightsteelblue; padding: 10px; margin-top: 5px;">
+			<div style="font-size: 14pt; font-weight: bold; padding-bottom: 0.5em;">Output</div>
+			<textarea style="width: 100%; height: 90%; resize: none;" id="output" readonly="true" ></textarea>
 		</div>
 	</body>
 </html>
