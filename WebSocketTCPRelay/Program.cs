@@ -9,7 +9,7 @@ namespace WebSocketTCPRelay
 {
     class Program
     {
-        private static TcpListener tcpListener;
+        private static TcpServer tcpServer;
         private static WebSocketServer webSocketServer;
         private static bool running = true;
 
@@ -24,34 +24,35 @@ namespace WebSocketTCPRelay
             Console.WriteLine("TCP listen port: " + tcpListenPort);
             Console.WriteLine("WebSocket listen port: " + webSocketListenPort);
 
-            //byte[] imageData = File.ReadAllBytes("d:\\test.png");
+            tcpServer = new TcpServer(IPAddress.Any, tcpListenPort);
+            tcpServer.Start();
+            tcpServer.OnDidReadBytes += TcpServer_OnDidReadBytes;
 
-            webSocketServer = new WebSocketServer(webSocketListenPort, false);
+            webSocketServer = new WebSocketServer(webSocketListenPort, true);
+            webSocketServer.OnReceiveBytes += WebSocketServer_OnReceiveBytes;
             webSocketServer.Start();
 
-            Console.WriteLine("Waiting for connection ...");
-
-            int count = 0;
+            Console.WriteLine("Waiting for connections ...");
 
             while (running)
             {
                 Thread.Sleep(10);
-
-                count++;
-
-                if (count >= 200)
-                {
-                    //webSocketServer.Write(imageData);
-                    //webSocketServer.Write(Encoding.UTF8.GetBytes("file:///D:/test.png"), true);
-                    webSocketServer.Write(Encoding.UTF8.GetBytes("Hallo Welt!"), true);
-
-                    count = 0;
-                }
             }
 
             Console.WriteLine("Shutting down");
 
+            tcpServer.Stop();
             webSocketServer.Stop();
+        }
+
+        static void WebSocketServer_OnReceiveBytes(byte[] data)
+        {
+            tcpServer?.Write(data);
+        }
+
+        static void TcpServer_OnDidReadBytes(WrappedTcpClient client, Span<byte> data)
+        {
+            webSocketServer?.Write(data.ToArray());
         }
 
         private static void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)

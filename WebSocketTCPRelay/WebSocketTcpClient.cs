@@ -112,21 +112,40 @@ namespace WebSocketTCPRelay
 
             byteBuffer = new ByteBuffer();
             receiveFragmentBuffer = new ByteBuffer();
-
-            var theStream = client.GetStream();
-            if (isSecureClient)
-            {
-                stream = new SslStream(theStream, false, HandleRemoteCertificateValidationCallback);
-            }
-            else
-            {
-                stream = theStream; 
-            }
         }
 
         public void Start()
         {
-            stream.BeginRead(tempBuffer, 0, tempBuffer.Length, ReadCallback, null);
+            var theStream = client.GetStream();
+            if (isSecureClient)
+            {
+                X509Certificate2 certificate = new X509Certificate2(
+                    Path.Combine(
+                        Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location),
+                        "MSNServer.p12"),
+                    "1234");
+
+                SslStream sslstream = new SslStream(theStream, false, HandleRemoteCertificateValidationCallback);
+                stream = sslstream;
+                try
+                {
+                    sslstream.AuthenticateAsServer(certificate);
+                }
+                catch (IOException ex)
+                {
+                    Console.WriteLine("AuthenticateAsServer failed: " + ex.Message);
+                    Close();
+                }
+            }
+            else
+            {
+                stream = theStream;
+            }
+
+            if (stream?.CanRead ?? false)
+            {
+                stream?.BeginRead(tempBuffer, 0, tempBuffer.Length, ReadCallback, null);
+            }
         }
 
         public void Stop()
@@ -153,6 +172,7 @@ namespace WebSocketTCPRelay
             IsReady = false;
 
             stream?.Flush();
+            stream = null;
 
             EndPoint endPoint = client?.Client?.RemoteEndPoint;
 

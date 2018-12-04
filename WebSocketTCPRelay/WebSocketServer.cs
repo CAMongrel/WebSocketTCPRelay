@@ -47,12 +47,12 @@ namespace WebSocketTCPRelay
 
             TcpClient client = listenerInstance.EndAcceptTcpClient(ar);
 
-            Console.WriteLine("Client connected from " + client.Client.RemoteEndPoint);
+            Console.WriteLine("WebSocketClient connected from " + client.Client.RemoteEndPoint);
 
             WebSocketTcpClient webSocketTcpClient = new WebSocketTcpClient(client, isSecureListener);
             webSocketTcpClient.OnDidClose += (endpoint, wsClient) =>
             {
-                Console.WriteLine("Removing client ... " + endpoint);
+                Console.WriteLine("Removing WebSocketClient ... " + endpoint);
                 if (connectedWebSockets.Contains(webSocketTcpClient))
                 {
                     connectedWebSockets.Remove(webSocketTcpClient);
