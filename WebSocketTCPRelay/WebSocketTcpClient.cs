@@ -12,7 +12,11 @@ namespace WebSocketTCPRelay
 {
     internal delegate void WillClose(TcpClient client, WebSocketTcpClient webSocketTcpClient);
     internal delegate void DidClose(EndPoint closedEndPoint, WebSocketTcpClient webSocketTcpClient);
-    internal delegate void DidRead(byte[] data);
+    /// <summary>
+    /// "data" is invalid after the call and cannot be used 
+    /// asynchronously afterwards.
+    /// </summary>
+    internal delegate void DidRead(ReadOnlySpan<byte> data);
     internal delegate bool ShouldAcceptOrigin(string origin);
 
     enum WebSocketOpCode : byte
@@ -397,7 +401,7 @@ namespace WebSocketTCPRelay
                         // If this is a "final" block and we have no previously
                         // buffered fragments, we can send this block directly
                         // to upstream.
-                        OnDidRead?.Invoke(decodedData);
+                        OnDidRead?.Invoke(decodedData.AsSpan());
                     }
                     else
                     {
@@ -405,7 +409,7 @@ namespace WebSocketTCPRelay
                         receiveFragmentBuffer.Write(decodedData);
                         if (isFinal == true)
                         {
-                            OnDidRead?.Invoke(receiveFragmentBuffer.GetBufferBytesCopy());
+                            OnDidRead?.Invoke(receiveFragmentBuffer.GetBufferBytesCopy().AsSpan());
                             receiveFragmentBuffer.Clear(true);
                         }
                     }

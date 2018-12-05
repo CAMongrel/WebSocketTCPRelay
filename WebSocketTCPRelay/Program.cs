@@ -45,12 +45,12 @@ namespace WebSocketTCPRelay
             webSocketServer.Stop();
         }
 
-        static void WebSocketServer_OnReceiveBytes(byte[] data)
+        static void WebSocketServer_OnReceiveBytes(ReadOnlySpan<byte> data)
         {
-            tcpServer?.Write(data);
+            tcpServer?.Write(data.ToArray());
         }
 
-        static void TcpServer_OnDidReadBytes(WrappedTcpClient client, Span<byte> data)
+        static void TcpServer_OnDidReadBytes(WrappedTcpClient client, ReadOnlySpan<byte> data)
         {
             webSocketServer?.Write(data.ToArray());
         }

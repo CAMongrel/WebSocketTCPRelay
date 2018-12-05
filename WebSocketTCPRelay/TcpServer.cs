@@ -7,9 +7,9 @@ namespace WebSocketTCPRelay
 {
     /// <summary>
     /// "data" is invalid after the call and cannot be used 
-    /// asynchronously afterwards
+    /// asynchronously afterwards.
     /// </summary>
-    internal delegate void DidReadBytes(WrappedTcpClient client, Span<byte> data);
+    internal delegate void DidReadBytes(WrappedTcpClient client, ReadOnlySpan<byte> data);
 
     internal class WrappedTcpClient
     {

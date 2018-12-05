@@ -6,7 +6,7 @@ using System.Text;
 
 namespace WebSocketTCPRelay
 {
-    internal delegate void ReceiveBytes(byte[] data);
+    internal delegate void ReceiveBytes(ReadOnlySpan<byte> data);
 
     /// <summary>
     /// Web socket server.
