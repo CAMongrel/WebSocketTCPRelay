@@ -14,6 +14,7 @@ namespace CommandHandler
         private static TcpClient client;
         private static NetworkStream stream;
         private static bool running = true;
+	private static bool captureStarted = false;
 
         private static byte[] buffer;
 
@@ -26,7 +27,7 @@ namespace CommandHandler
             receivedStrings = new Queue<string>();
             buffer = new byte[2048];
 
-            client = new TcpClient("localhost", 9001);
+            client = new TcpClient("18.196.35.66", 9001);
             stream = client.GetStream();
             stream.BeginRead(buffer, 0, buffer.Length, HandleAsyncCallback, stream);
 
@@ -88,7 +89,8 @@ namespace CommandHandler
                 case "getinfo":
                     {
                         Command command = new Command();
-                        command.Cmd = "getinfor_esult";
+                        command.Cmd = "getinfo_result";
+			command.Parameters.Add("version", "VehicleControlModule version 0.1");
                         SendCommand(command);
                     }
                     break;
@@ -97,9 +99,33 @@ namespace CommandHandler
                     {
                         Command command = new Command();
                         command.Cmd = "startcapture_result";
+			if (captureStarted)
+			{
+			    command.Parameters.Add("status", "Can't start ... already started.");
+			} else
+			{
+			    command.Parameters.Add("status", "Starting capture ...");
+			    captureStarted = true;
+			}
                         SendCommand(command);
                     }
                     break;
+
+		case "stopcapture":
+		    {
+			Command command = new Command();
+			command.Cmd = "stopcapture_result";
+			if (captureStarted)
+			{
+			    command.Parameters.Add("status", "Stopping capture ...");
+			    captureStarted = false;
+			} else
+			{
+			    command.Parameters.Add("status", "Stop not possible: Not started yet.");
+			}
+			SendCommand(command);
+		    }
+		    break;
 
                 default:
                     SendCommand(new Command() { Cmd = "error", Parameters = { { "error", "Unknown command: " + cmd.Cmd } } });
